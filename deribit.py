@@ -167,6 +167,23 @@ def get_candles(instrument_name, start_timestamp,
 
 
 def daterange(start_date: datetime, end_date: datetime, delta: timedelta = timedelta(days=1)):
+    '''
+    Range iterator for datetime objects.
+
+    Parameters
+    ----------
+    start_date : datetime
+        First date in range.
+    end_date : datetime
+        Last date in range.
+    delta : timedelta, optional
+        Size of increment for range, by default timedelta(days=1)
+
+    Yields
+    -------
+    datetime
+        Next datetime in range.
+    '''    
     for n in range(int((end_date - start_date) / delta)):
         yield start_date + delta * n
 
