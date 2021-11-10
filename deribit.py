@@ -13,11 +13,12 @@ URL = 'https://deribit.com/api/v2'
 RATE_LIMIT_PER_SEC = 20
 
 
-def validate(resp: requests.Response):
+def validate_response(resp: requests.Response):
     '''
     validate request response
     '''
     assert resp.status_code == 200, resp.raise_for_status()
+    return resp
 
 
 def get_instruments(currency, kind=None, expired=None) -> dict:
@@ -43,8 +44,9 @@ def get_instruments(currency, kind=None, expired=None) -> dict:
         'expired': expired
     }
 
-    resp = requests.get(URL + '/public/get_instruments', params=params)
-    validate(resp)
+    resp = validate_response(
+        requests.get(URL + '/public/get_instruments', params=params)
+    )
 
     symbols = list(map(lambda x: x.get('instrument_name'),
                    resp.json().get('result')))
@@ -94,9 +96,9 @@ def get_candles(instrument_name, start_timestamp, end_timestamp, resolution):
         'resolution': resolution
     }
 
-    resp = requests.get(
-        URL + '/public/get_tradingview_chart_data', params=params)
-    validate(resp)
+    resp = validate_response(
+        requests.get(URL + '/public/get_tradingview_chart_data', params=params)
+    )
 
     status = resp.json().get('status')
     if status == 'no_data':
