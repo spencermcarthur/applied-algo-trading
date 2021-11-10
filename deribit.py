@@ -25,31 +25,36 @@ def get_instruments(currency, kind=None, expired=None) -> dict:
     '''
     get list of instruments by currency and kind
     '''
+    # handle lists of currencies and kinds
     if isinstance(currency, list):
-        res = []
+        results = []
         for ccy in currency:
             if isinstance(kind, list):
                 for k in kind:
-                    res += get_instruments(ccy, k, expired)
+                    results += get_instruments(ccy, k, expired)
             else:
-                res += get_instruments(ccy, kind, expired)
-        return res
+                results += get_instruments(ccy, kind, expired)
+        return results
 
+    # convert expired flag to string (API requirement)
     if isinstance(expired, bool):
         expired = str(expired).lower()
 
+    # create parameters dict
     params = {
         'currency': currency,
         'kind': kind,
         'expired': expired
     }
 
+    # send GET request and validate response
     resp = validate_response(
         requests.get(URL + '/public/get_instruments', params=params)
     )
 
-    symbols = list(map(lambda x: x.get('instrument_name'),
-                   resp.json().get('result')))
+    # get list of results and extract instrument names
+    results = resp.json().get('result')
+    symbols = list(map(lambda x: x.get('instrument_name'), results))
 
     return symbols
 
