@@ -28,7 +28,7 @@ def get_instruments(currency, kind=None, expired=None) -> list:
     Parameters
     ----------
     currency : string, list
-        Currency or list of currencies t
+        Currency or list of currencies to get instruments for.
     kind : string, list, optional
         Kind of instrument(s) to get, by default None.
         Options are "future" and "option"
@@ -40,7 +40,7 @@ def get_instruments(currency, kind=None, expired=None) -> list:
     -------
     list
         List of instrument names.
-    '''    
+    '''
     # handle lists of currencies and kinds
     if isinstance(currency, list):
         results = []
