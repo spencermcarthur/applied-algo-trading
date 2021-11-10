@@ -21,10 +21,26 @@ def validate_response(resp: requests.Response):
     return resp
 
 
-def get_instruments(currency, kind=None, expired=None) -> dict:
+def get_instruments(currency, kind=None, expired=None) -> list:
     '''
-    get list of instruments by currency and kind
-    '''
+    Get list of instruments by currency and kind.
+
+    Parameters
+    ----------
+    currency : string, list
+        Currency or list of currencies t
+    kind : string, list, optional
+        Kind of instrument(s) to get, by default None.
+        Options are "future" and "option"
+    expired : bool, optional
+        Flag to indicate whether to return expired isntruments,
+        by default None.
+
+    Returns
+    -------
+    list
+        List of instrument names.
+    '''    
     # handle lists of currencies and kinds
     if isinstance(currency, list):
         results = []
