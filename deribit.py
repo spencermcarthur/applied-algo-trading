@@ -75,41 +75,63 @@ def get_instruments(currency, kind=None, expired=None) -> list:
     return symbols
 
 
-def get_candles(instrument_name, start_timestamp, end_timestamp, resolution):
+def get_candles(instrument_name, start_timestamp,
+                end_timestamp, resolution) -> pd.DataFrame:
     '''
-    get price candles based on instrument name, start time, end time, and time resolution
+    Get price candles based on instrument name, start time,
+    end time, and time resolution.
 
-    Parameters:
-        instrument_name : str
-            symbol of instrument as returned by "get_instruments"
-        start_timestamp : str, datetime, int
-            date string, datetime object, or integer timestamp of
-            the start time of the time range
-        end_timestamp : str, datetime, int
-            date string, datetime object, or integer timestamp of
-            the end time of the time range
-        resolution : str, int
+    Parameters
+    ----------
+    instrument_name : str
+        Symbol of instrument as returned by "get_instruments".
+    start_timestamp : str, datetime
+        First time to retrieve.
+    end_timestamp : str, datetime
+        Last time to retrieve.
+    resolution : str, int
+        Aggregation period for the candles, in minutes.
+        Options are "1", "3", "5", "10", "15", "30", "60",
+        "120", "180", "360", "720", and "1D". These are in
+        minutes, with the exception of "1D", which represents
+        one day.
 
+    Returns
+    -------
+    DataFrame
+        A dataframe containing the candles.
+        Columns are "open", "high", "low", "close", and "volume".
+        Index is a datetime index.
     '''
+    # check/convert timestamp types
     if isinstance(start_timestamp, str):
         start_timestamp = round(parse(start_timestamp).timestamp() * 1000)
     elif isinstance(start_timestamp, datetime):
         start_timestamp = round(start_timestamp.timestamp() * 1000)
+    else:
+        raise ValueError('start_timestamp must be str or datetime')
 
     if isinstance(end_timestamp, str):
         end_timestamp = round(parse(end_timestamp).timestamp() * 1000)
     elif isinstance(end_timestamp, datetime):
         end_timestamp = round(end_timestamp.timestamp() * 1000)
+    else:
+        raise ValueError('end_timestamp must be str or datetime')
 
+    # check resolution type
     if isinstance(resolution, int):
         resolution = str(resolution)
+    elif not isinstance(resolution, str):
+        raise ValueError('resolution must be str or int')
 
+    # check resolution value
     resolution_choices = ['1', '3', '5', '10', '15',
                           '30', '60', '120', '180', '360', '720', '1D']
     if not resolution in resolution_choices:
         raise ValueError(
             f'resolution must be one of {", ".join(resolution_choices)}')
 
+    # create parameters dict
     params = {
         'instrument_name': instrument_name,
         'start_timestamp': start_timestamp,
@@ -117,20 +139,24 @@ def get_candles(instrument_name, start_timestamp, end_timestamp, resolution):
         'resolution': resolution
     }
 
+    # send GET request and validate response
     resp = validate_response(
         requests.get(URL + '/public/get_tradingview_chart_data', params=params)
     )
 
+    # check response status
     status = resp.json().get('status')
     if status == 'no_data':
         warnings.warn(f'No data: {instrument_name}')
         return
 
-    res = resp.json().get('result')
-    res.pop('status')
-    res.pop('cost')
+    # get results and remove unwanted fields
+    results = resp.json().get('result')
+    results.pop('status')
+    results.pop('cost')
 
-    df = pd.DataFrame(res)
+    # create/format DataFrame to store results
+    df = pd.DataFrame(results)
     df['time'] = df.ticks.apply(
         lambda x: datetime.fromtimestamp(round(x / 1000)))
     df.drop('ticks', axis=1, inplace=True)
